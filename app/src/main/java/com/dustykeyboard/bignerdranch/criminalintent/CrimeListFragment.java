@@ -1,5 +1,6 @@
 package com.dustykeyboard.bignerdranch.criminalintent;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -16,19 +17,26 @@ import android.widget.Toast;
 import org.w3c.dom.Text;
 
 import java.util.List;
+import java.util.UUID;
+
+import static android.R.attr.id;
 
 /**
  * Created by jfredrickson on 10/22/2016.
  */
 
 public class CrimeListFragment extends Fragment {
+    private static final String KEY_LAST_CRIME_VIEWED = "last_crime_viewed";
+    private static final int REQUEST_CODE_CRIME = 1;
+
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
+    private int mLastViewed;
 
     @Override
     public void onResume() {
         super.onResume();
-        updateUI();
+        //updateUI();
     }
 
     @Override
@@ -38,9 +46,25 @@ public class CrimeListFragment extends Fragment {
         mCrimeRecyclerView = (RecyclerView) view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        if( savedInstanceState != null) {
+            mLastViewed = savedInstanceState.getInt(KEY_LAST_CRIME_VIEWED, 0); //default set to 0. Should this be -1?
+        }
+
         updateUI();
 
         return view;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(resultCode == Activity.RESULT_OK) {
+            if(requestCode == REQUEST_CODE_CRIME) {
+                if(CrimeFragment.wasCrimeUpdated(data)) {
+                    //updateUI
+                    mAdapter.notifyItemChanged(mLastViewed);
+                }
+            }
+        }
     }
 
     private void updateUI() {
@@ -54,7 +78,7 @@ public class CrimeListFragment extends Fragment {
             mAdapter = new CrimeAdapter(crimes);
             mCrimeRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.notifyDataSetChanged();
+            //mAdapter.notifyItemChanged(mLastViewed);
         }
     }
 
@@ -83,9 +107,15 @@ public class CrimeListFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            Intent intent = CrimeActivity.newIntent(getActivity(),mCrime.getId());
-            startActivity(intent);
+            UUID crimeId;
+
+            crimeId = mCrime.getId();
+            mLastViewed = mAdapter.getIndex(crimeId);
+            Intent intent = CrimeActivity.newIntent(getActivity(),crimeId);
+            startActivityForResult(intent, REQUEST_CODE_CRIME);
         }
+
+
     }
 
     private class CrimeAdapter extends RecyclerView.Adapter<CrimeHolder> {
@@ -93,6 +123,17 @@ public class CrimeListFragment extends Fragment {
 
         public CrimeAdapter(List<Crime> crimes) {
             mCrimes = crimes;
+        }
+
+        public int getIndex(UUID crimeId) {
+            int index = 0;
+            for (Crime crime : mCrimes) {
+                if (crime.getId().equals(crimeId)) {
+                    return index;
+                } else
+                    index++;
+            }
+            return index;
         }
 
         @Override

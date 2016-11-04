@@ -1,5 +1,7 @@
 package com.dustykeyboard.bignerdranch.criminalintent;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.LayoutInflaterCompat;
@@ -21,11 +23,14 @@ import java.util.UUID;
 
 public class CrimeFragment extends Fragment {
     private static final String ARG_CRIME_ID = "crime_id";
+    private static final String EXTRA_WAS_UPDATED = "com.dustykeyboard.bignerdranch.criminalintent.was_updated";
+    private static final String KEY_UPDATE_STATUS = "udpate_status";
 
     private Crime mCrime;
     private EditText mTitleField;
     private Button mDateButton;
     private CheckBox mSolvedCheckBox;
+    private boolean mWasUpdated;
 
     public static CrimeFragment newInstance(UUID crimeID) {
         Bundle args = new Bundle();
@@ -41,6 +46,18 @@ public class CrimeFragment extends Fragment {
         super.onCreate(savedInstanceState);
         UUID crimeID = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeID);
+
+
+        if (savedInstanceState != null) {
+            mWasUpdated = savedInstanceState.getBoolean(KEY_UPDATE_STATUS, false); //recover udpate state
+            setUpdateStatus(mWasUpdated); //set update state
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean(KEY_UPDATE_STATUS, mWasUpdated); //save update state
     }
 
     @Override
@@ -58,6 +75,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 mCrime.setTitle(s.toString());
+                setUpdateStatus(true);
 
             }
 
@@ -78,9 +96,22 @@ public class CrimeFragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 //set the crimes Solved status
                 mCrime.setSolved(isChecked);
+                setUpdateStatus(true);
             }
         });
 
         return v;
+    }
+
+    private void setUpdateStatus(boolean wasUpdated) {
+        Intent data = new Intent();
+        data.putExtra(EXTRA_WAS_UPDATED, wasUpdated);
+        getActivity().setResult(Activity.RESULT_OK, data);
+        mWasUpdated = wasUpdated;
+    }
+
+    public static boolean wasCrimeUpdated(Intent result) {
+        //return update status
+        return result.getBooleanExtra(EXTRA_WAS_UPDATED, false);
     }
 }
