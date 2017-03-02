@@ -17,7 +17,7 @@ public class Crime {
     public Crime() {
         //generate unique identifier
         mId = UUID.randomUUID();
-        mDate = new Date(); //default contructor used current date. Used to autofill
+        mDate = new Date(); //default contructor used for current date. Used to autofill
        //should this not have... mSolved = false;
     }
 
