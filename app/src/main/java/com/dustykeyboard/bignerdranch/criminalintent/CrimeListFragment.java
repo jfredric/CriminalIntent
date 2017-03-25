@@ -3,10 +3,14 @@ package com.dustykeyboard.bignerdranch.criminalintent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -22,13 +26,69 @@ import java.util.List;
  */
 
 public class CrimeListFragment extends Fragment {
+    private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
+    private static final String ARG_SUBTITLE_VISIBLE = "com.dustykeyboard.bignerdranch.criminalintent.SUBTITLE_VISIBLE";
+
+
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
+    private boolean mSubtitleVisible;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+        /**if(savedInstanceState != null) {
+            mSubtitleVisible = (Boolean) savedInstanceState.getSerializable(ARG_SUBTITLE_VISIBLE);
+        }**/
+    }
 
     @Override
     public void onResume() {
         super.onResume();
         updateUI();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(SAVED_SUBTITLE_VISIBLE, mSubtitleVisible);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater); //This is optional, but suggested as a matter of convention
+        inflater.inflate(R.menu.fragment_crime_list, menu);
+
+        MenuItem subTitleItem = menu.findItem(R.id.menu_item_show_subtitle);
+        if(mSubtitleVisible) {
+            subTitleItem.setTitle(R.string.hide_subtitle);
+        } else {
+            subTitleItem.setTitle(R.string.show_subtitle);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_new_crime:
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).addCrime(crime);
+                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId(), mSubtitleVisible);
+                startActivity(intent);
+                return true;
+            case R.id.menu_item_show_subtitle:
+                mSubtitleVisible = !mSubtitleVisible;
+                /** This works but not the point of the lesson (chapter 13)
+                 * CriminalIntentSettings settings = CriminalIntentSettings.get(getActivity());
+                 * settings.setSubtitleVisible(mSubtitleVisible);
+                 * **/
+                getActivity().invalidateOptionsMenu();
+                updateSubtitle();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -38,14 +98,44 @@ public class CrimeListFragment extends Fragment {
         mCrimeRecyclerView = (RecyclerView) view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        if(savedInstanceState != null) {
+            mSubtitleVisible = savedInstanceState.getBoolean(SAVED_SUBTITLE_VISIBLE);
+        } else {
+            mSubtitleVisible = getActivity().getIntent().getBooleanExtra(ARG_SUBTITLE_VISIBLE,false);
+        }
+        /** This works but not the point of the lesson (chapter 13)
+         * else { mSubtitleVisible = CriminalIntentSettings.get(getActivity()).isSubtitleVisible();}
+         */
+
+
         updateUI();
 
         return view;
     }
 
+    public static Intent saveSubtitleVisible(Intent intent, Boolean subtitleVisible) {
+        intent.putExtra(ARG_SUBTITLE_VISIBLE, subtitleVisible);
+        return intent;
+    }
+
+    private void updateSubtitle() {
+        CrimeLab crimeLab = CrimeLab.get(getActivity());
+        int crimeCount = crimeLab.getCrimes().size();
+        String subtitle = getString(R.string.subtitle_format, crimeCount);
+
+        if(!mSubtitleVisible) {
+            subtitle = null;
+        }
+
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        activity.getSupportActionBar().setSubtitle(subtitle);
+    }
+
+
     private void updateUI() {
         /** Why is this just not implemented within onCreateView?
-         *  I do not see any code reuse.
+         *  I do not see any code reused
+         *  1) possibly just to reuse updateSubtitle(). This may be for future use.
          *   */
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
@@ -56,6 +146,8 @@ public class CrimeListFragment extends Fragment {
         } else {
             mAdapter.notifyDataSetChanged();
         }
+
+        updateSubtitle();
     }
 
     private class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -84,7 +176,7 @@ public class CrimeListFragment extends Fragment {
         @Override
         public void onClick(View v) {
             //Intent intent = CrimeActivity.newIntent(getActivity(),mCrime.getId());
-            Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getId());
+            Intent intent = CrimePagerActivity.newIntent(getActivity(), mCrime.getId(), mSubtitleVisible);
             startActivity(intent);
         }
     }
