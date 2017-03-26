@@ -39,14 +39,16 @@ public class CrimeLab {
         mCrimes.add(crime);
     }
 
-    /**public void deleteCrime(UUID id) {
-        Iterator<Crime> iterator = mCrimes.listIterator();
+    public void deleteCrime(UUID id) {
+        int ndx = 0;
         for (Crime crime : mCrimes) {
             if (crime.getId().equals(id)) {
-                mCrimes.remove(crime);
+                mCrimes.remove(ndx);
+                return;
             }
+            ndx++;
         }
-    }**/
+    }
 
     public List<Crime> getCrimes() {
         return mCrimes;

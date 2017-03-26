@@ -103,7 +103,7 @@ public class CrimeListFragment extends Fragment {
         } else {
             mSubtitleVisible = getActivity().getIntent().getBooleanExtra(ARG_SUBTITLE_VISIBLE,false);
         }
-        /** This works but not the point of the lesson (chapter 13)
+        /** This also works but not the point of the lesson (chapter 13)
          * else { mSubtitleVisible = CriminalIntentSettings.get(getActivity()).isSubtitleVisible();}
          */
 
@@ -121,7 +121,7 @@ public class CrimeListFragment extends Fragment {
     private void updateSubtitle() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         int crimeCount = crimeLab.getCrimes().size();
-        String subtitle = getString(R.string.subtitle_format, crimeCount);
+        String subtitle = getResources().getQuantityString(R.plurals.subtitle_plural, crimeCount, crimeCount);
 
         if(!mSubtitleVisible) {
             subtitle = null;
