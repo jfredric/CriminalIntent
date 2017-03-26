@@ -13,6 +13,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,14 +34,12 @@ public class CrimeListFragment extends Fragment {
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
     private boolean mSubtitleVisible;
+    private TextView mEmptyLabel;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        /**if(savedInstanceState != null) {
-            mSubtitleVisible = (Boolean) savedInstanceState.getSerializable(ARG_SUBTITLE_VISIBLE);
-        }**/
     }
 
     @Override
@@ -98,6 +97,9 @@ public class CrimeListFragment extends Fragment {
         mCrimeRecyclerView = (RecyclerView) view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        mEmptyLabel = (TextView) view.findViewById(R.id.crime_list_empty_label);
+
+
         if(savedInstanceState != null) {
             mSubtitleVisible = savedInstanceState.getBoolean(SAVED_SUBTITLE_VISIBLE);
         } else {
@@ -139,6 +141,12 @@ public class CrimeListFragment extends Fragment {
          *   */
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
+
+        if(crimes.size() > 0) {
+            mEmptyLabel.setVisibility(View.INVISIBLE);
+        } else {
+            mEmptyLabel.setVisibility(View.VISIBLE);
+        }
 
         if(mAdapter == null) {
             mAdapter = new CrimeAdapter(crimes);
