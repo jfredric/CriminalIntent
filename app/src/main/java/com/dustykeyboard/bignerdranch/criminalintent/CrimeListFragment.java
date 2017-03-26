@@ -35,6 +35,7 @@ public class CrimeListFragment extends Fragment {
     private CrimeAdapter mAdapter;
     private boolean mSubtitleVisible;
     private TextView mEmptyLabel;
+    private Button mAddButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,7 +98,6 @@ public class CrimeListFragment extends Fragment {
         mCrimeRecyclerView = (RecyclerView) view.findViewById(R.id.crime_recycler_view);
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        mEmptyLabel = (TextView) view.findViewById(R.id.crime_list_empty_label);
 
 
         if(savedInstanceState != null) {
@@ -109,6 +109,18 @@ public class CrimeListFragment extends Fragment {
          * else { mSubtitleVisible = CriminalIntentSettings.get(getActivity()).isSubtitleVisible();}
          */
 
+        mEmptyLabel = (TextView) view.findViewById(R.id.crime_list_empty_label);
+
+        mAddButton = (Button) view.findViewById(R.id.crime_list_add_button);
+        mAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).addCrime(crime);
+                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId(), mSubtitleVisible);
+                startActivity(intent);
+            }
+        });
 
         updateUI();
 
@@ -144,8 +156,10 @@ public class CrimeListFragment extends Fragment {
 
         if(crimes.size() > 0) {
             mEmptyLabel.setVisibility(View.INVISIBLE);
+            mAddButton.setVisibility(View.INVISIBLE);
         } else {
             mEmptyLabel.setVisibility(View.VISIBLE);
+            mAddButton.setVisibility(View.VISIBLE);
         }
 
         if(mAdapter == null) {
